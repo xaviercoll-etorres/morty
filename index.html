@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morty · Comparador de Financiación</title>
+<link rel="icon" type="image/x-icon" href="icon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="wordmark">Morty<span>.</span></div>
+    <div class="brand">
+      <div class="brand-mark">€</div>
+      <div>
+        <h1>Comparador de Financiación</h1>
+        <p>El mejor banco y plan para cada operación, en segundos</p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-view="comparador">Comparador</button>
+      <button class="tab" data-view="planes">Planes de bancos</button>
+      <button class="tab" data-view="instrucciones">Cómo subir datos</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ VISTA: COMPARADOR ============ -->
+<section id="view-comparador" class="view active">
+
+  <div class="calc-card">
+    <div class="card-label">Datos de la operación</div>
+    <div class="calc-grid">
+      <div class="field">
+        <label for="inp-pvp">PVP <span class="hint">precio de venta</span></label>
+        <div class="input-euro">
+          <input type="number" id="inp-pvp" min="0" step="100" value="20000" inputmode="decimal">
+          <span>€</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="inp-entrada">Entrada</label>
+        <div class="input-euro">
+          <input type="number" id="inp-entrada" min="0" step="100" value="0" inputmode="decimal">
+          <span>€</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Importe a financiar</label>
+        <div class="importe-financiar" id="importe-financiar">20.000 €</div>
+      </div>
+      <div class="field field-meses">
+        <label for="inp-meses">Plazo en meses</label>
+        <div class="meses-control">
+          <input type="range" id="rng-meses" min="12" max="120" step="12" value="48">
+          <input type="number" id="inp-meses" min="6" max="180" step="1" value="48">
+        </div>
+        <div class="meses-chips" id="meses-chips">
+          <button data-m="12">12</button><button data-m="24">24</button><button data-m="36">36</button>
+          <button data-m="48" class="on">48</button><button data-m="60">60</button><button data-m="72">72</button>
+          <button data-m="96">96</button><button data-m="120">120</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="sel-banco">Banco</label>
+        <select id="sel-banco"><option value="">Todos los bancos</option></select>
+      </div>
+      <div class="field">
+        <label for="sel-orden">Criterio de comparación</label>
+        <select id="sel-orden">
+          <option value="cuota">Cuota mensual más baja</option>
+          <option value="costeTotal">Menor coste total</option>
+          <option value="comComercialEur">Mayor comisión comercial</option>
+          <option value="tin">TIN más bajo</option>
+          <option value="taeReal">TAE real más baja</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="destacados" class="destacados"></div>
+
+  <div id="resultados-wrap">
+    <div class="resultados-fila">
+      <div class="tabla-card">
+        <div class="tabla-scroll-top" id="matriz-scroll-top" hidden><div id="matriz-scroll-top-inner"></div></div>
+        <div class="tabla-scroll" id="matriz-wrap"></div>
+      </div>
+      <div id="bancos-ocultos" class="bancos-ocultos" hidden></div>
+    </div>
+    <p id="no-disponibles" class="nota-nd"></p>
+  </div>
+
+  <div id="sin-datos" class="vacio" hidden>
+    <div class="vacio-icono">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    </div>
+    <h3>Aún no hay planes cargados</h3>
+    <p>Ve a <strong>Planes de bancos</strong> para subir los CSV de tus financieras.</p>
+    <button class="btn" id="btn-reales-vacio">Cargar tarifas reales</button>
+  </div>
+
+</section>
+
+<!-- ============ VISTA: PLANES ============ -->
+<section id="view-planes" class="view">
+
+  <div class="planes-head">
+    <h2>Planes de financiación cargados</h2>
+    <div class="planes-actions">
+      <button class="btn" id="btn-reales">Cargar tarifas reales</button>
+      <button class="btn btn-sec" id="btn-exportar">Exportar CSV</button>
+      <button class="btn btn-ghost-danger" id="btn-borrar-todo">Borrar todo</button>
+    </div>
+  </div>
+
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="file-csv" accept=".csv,text/csv" multiple hidden>
+    <div class="dz-inner">
+      <div class="dz-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0-12 4 4m-4-4L8 7"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      </div>
+      <p class="dz-titulo"><strong>Arrastra aquí el CSV</strong> &nbsp;o&nbsp; <button class="linklike" id="btn-elegir">elige un archivo</button></p>
+      <p class="hint">Formato requerido en la pestaña <em>Cómo subir datos</em> · acepta separador <code>;</code> o <code>,</code> y decimales con coma</p>
+    </div>
+    <label class="dz-modo">
+      <input type="checkbox" id="chk-reemplazar" checked>
+      Reemplazar los planes de los bancos incluidos en el CSV <span class="hint">(desmarcado, se añaden)</span>
+    </label>
+  </div>
+
+  <div id="upload-log" class="upload-log" hidden></div>
+
+  <div id="lista-bancos" class="lista-bancos"></div>
+
+</section>
+
+<!-- ============ VISTA: INSTRUCCIONES ============ -->
+<section id="view-instrucciones" class="view">
+
+  <div class="doc">
+    <h2>Cómo preparar y subir los datos de un banco</h2>
+    <p class="doc-intro">La aplicación necesita los planes de financiación en un <strong>CSV con un formato concreto</strong>.
+       Cada banco envía sus condiciones en un Excel o PDF distinto: hay que transformarlo una vez y subirlo aquí.</p>
+
+    <ol class="pasos">
+      <li>
+        <div class="paso-num">1</div>
+        <div class="paso-cuerpo">
+          <h3>Consigue las condiciones del banco</h3>
+          <p>Pide al banco o financiera su tabla de campañas vigente (normalmente un Excel con plazos, TIN, comisiones e importes).</p>
+        </div>
+      </li>
+      <li>
+        <div class="paso-num">2</div>
+        <div class="paso-cuerpo">
+          <h3>Transforma el Excel al formato de la aplicación</h3>
+          <p>La forma más rápida: <strong>usa una IA</strong> (Claude, ChatGPT, Copilot…). Adjunta el Excel o pega la tabla del banco junto con este prompt:</p>
+          <div class="prompt-box">
+            <button class="btn btn-copy" id="btn-copy-prompt">Copiar prompt</button>
+            <pre id="prompt-ia">Convierte la tabla de condiciones de financiación adjunta a un CSV con EXACTAMENTE estas columnas y esta cabecera (separador punto y coma, decimales con coma):
+
+banco;plan;meses_min;meses_max;tin;tae;comision_apertura;comision_apertura_min;importe_min;importe_max;comision_comercial;coeficiente;notas
+
+Reglas:
+- banco: nombre corto del banco o financiera (igual en todas las filas).
+- plan: nombre de la campaña o producto.
+- meses_min y meses_max: rango de plazo en meses que admite el plan. Si el plan es de un único plazo, pon el mismo número en ambas.
+- tin: tipo de interés nominal anual en %, solo el número (ej.: 7,95). Si el plan es sin intereses, pon 0.
+- tae: TAE anunciada en % si aparece; si no, déjalo vacío.
+- comision_apertura: comisión de apertura en % sobre el importe financiado, solo el número. Si no hay, pon 0.
+- comision_apertura_min: importe mínimo en € de esa comisión si existe; si no, vacío.
+- importe_min e importe_max: importe financiable mínimo y máximo en € del plan. Si no hay máximo, deja importe_max vacío.
+- comision_comercial: comisión en % que el banco paga al comercial/concesionario por la operación (a veces llamada «referencia», «C.T.» o «baremo»), si figura; si no, vacío. Si varía según el plazo o el seguro vendido, crea una fila por cada combinación.
+- coeficiente: SOLO si la tarifa da coeficientes de cuota (cuota mensual por cada euro financiado, ej. 0,024408). Pon el coeficiente con todos sus decimales y en ese caso la cuota se calculará como coeficiente × importe y se entenderá que la comisión de apertura va financiada dentro de la cuota. Si la tarifa distingue coeficientes con y sin seguros, crea un plan por cada variante (ej. «TIN 6,99 con PPP» y «TIN 6,99 sin PPP»). Si no hay coeficientes, déjalo vacío.
+- notas: cualquier condición relevante (carencia, producto vinculado, solo vehículo nuevo, antigüedad máxima, etc.), en una frase corta.
+- Una fila por cada combinación de plan y condiciones distintas: si el TIN, el coeficiente o la comisión cambian según el plazo, crea una fila por cada plazo con meses_min = meses_max = ese plazo.
+- Si la tarifa tiene varios niveles de TIN a elegir por el comercial, crea un plan por cada nivel (ej. «TIN 5,99», «TIN 6,50»…).
+- No inventes datos: lo que no aparezca en el documento, déjalo vacío.
+- Responde SOLO con el CSV, sin explicaciones ni ``` alrededor.</pre>
+          </div>
+          <p>Copia la respuesta de la IA, pégala en el Bloc de notas y guárdala como <code>banco.csv</code>
+             (o pídele el archivo directamente si la IA permite descargarlo).</p>
+          <p class="hint">También puedes rellenar la <button class="linklike" id="btn-plantilla">plantilla CSV vacía</button> a mano en Excel:
+             mantén la primera fila tal cual y guarda como «CSV (delimitado por punto y coma)».</p>
+        </div>
+      </li>
+      <li>
+        <div class="paso-num">3</div>
+        <div class="paso-cuerpo">
+          <h3>Revisa antes de subir</h3>
+          <ul>
+            <li>La primera fila debe ser exactamente la cabecera indicada.</li>
+            <li>Los porcentajes van <strong>sin el símbolo %</strong> (escribe <code>7,95</code>, no <code>7,95%</code>).</li>
+            <li>Los importes van sin puntos de miles ni símbolo € (escribe <code>60000</code>).</li>
+            <li>Comprueba 2-3 filas contra el documento original del banco.</li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <div class="paso-num">4</div>
+        <div class="paso-cuerpo">
+          <h3>Sube el archivo</h3>
+          <p>Ve a la pestaña <strong>Planes de bancos</strong> y arrastra el CSV a la zona de subida.
+             La aplicación valida cada fila y avisa de los errores. Por defecto, los planes nuevos de un banco
+             <strong>reemplazan</strong> a los que ya tuviera cargados: así actualizas condiciones sin duplicar.</p>
+        </div>
+      </li>
+    </ol>
+
+    <h3 class="doc-seccion">Formato de referencia</h3>
+    <div class="tabla-card">
+      <div class="tabla-scroll">
+        <table class="tabla tabla-doc">
+          <thead><tr><th>Columna</th><th>Obligatoria</th><th>Descripción</th><th>Ejemplo</th></tr></thead>
+          <tbody>
+            <tr><td><code>banco</code></td><td>Sí</td><td>Nombre del banco/financiera</td><td>Santander Consumer</td></tr>
+            <tr><td><code>plan</code></td><td>Sí</td><td>Nombre de la campaña</td><td>Auto Nuevo 2026</td></tr>
+            <tr><td><code>meses_min</code></td><td>Sí</td><td>Plazo mínimo (meses)</td><td>12</td></tr>
+            <tr><td><code>meses_max</code></td><td>Sí</td><td>Plazo máximo (meses)</td><td>96</td></tr>
+            <tr><td><code>tin</code></td><td>Sí</td><td>Interés nominal anual %</td><td>7,95</td></tr>
+            <tr><td><code>tae</code></td><td>No</td><td>TAE anunciada %</td><td>9,10</td></tr>
+            <tr><td><code>comision_apertura</code></td><td>Sí (0 si no hay)</td><td>% sobre importe financiado</td><td>2,5</td></tr>
+            <tr><td><code>comision_apertura_min</code></td><td>No</td><td>Mínimo en € de la apertura</td><td>90</td></tr>
+            <tr><td><code>importe_min</code></td><td>No</td><td>Importe financiable mínimo €</td><td>3000</td></tr>
+            <tr><td><code>importe_max</code></td><td>No</td><td>Importe financiable máximo €</td><td>60000</td></tr>
+            <tr><td><code>comision_comercial</code></td><td>No</td><td>% que cobra el comercial</td><td>1,5</td></tr>
+            <tr><td><code>coeficiente</code></td><td>No</td><td>Cuota por € financiado; si existe, la cuota es coeficiente × importe y la apertura va financiada dentro</td><td>0,024408</td></tr>
+            <tr><td><code>notas</code></td><td>No</td><td>Condiciones relevantes</td><td>Solo vehículo nuevo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="doc-seccion">Ejemplo de CSV válido</h3>
+    <pre class="csv-ejemplo">banco;plan;meses_min;meses_max;tin;tae;comision_apertura;comision_apertura_min;importe_min;importe_max;comision_comercial;coeficiente;notas
+Santander Consumer;Auto Nuevo;12;96;7,95;9,10;2,5;90;3000;60000;1,5;;Solo vehículo nuevo
+Cetelem;Confort;24;72;8,50;9,80;2;75;1000;40000;2;;
+BBVA VN-VSN;TIN 5,99 sin PPP;48;48;5,99;;3,95;150;;;2,25;0,024408;CAP financiada en la cuota</pre>
+  </div>
+
+</section>
+
+</main>
+
+<section id="mejoras-web" class="mejoras-web">
+  <div class="card-label">Mejoras de la web</div>
+  <p class="hint mejoras-intro">Deja aquí notas para el informático: fallos, ideas o cosas que mejorarías. Se guardan en el servidor y las verá al revisar la web.</p>
+  <form id="form-mejora" class="mejoras-form">
+    <textarea id="txt-mejora" rows="2" placeholder="Escribe tu nota..." maxlength="2000" required></textarea>
+    <button type="submit" class="btn">Guardar nota</button>
+  </form>
+  <ul id="lista-mejoras" class="lista-mejoras"></ul>
+</section>
+
+<footer class="pie">Comparador de Financiación · herramienta interna para comerciales</footer>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="tarifas.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
